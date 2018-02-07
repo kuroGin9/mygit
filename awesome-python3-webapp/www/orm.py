@@ -84,7 +84,7 @@ class StringField(Field):
 class BooleanField(Field):
 
     def __init__(self, name=None, default=False):
-        super().__init__(name, "boolean", False, default)
+        super().__init__(name, 'boolean', False, default)
 
 class IntegerField(Field):
 
@@ -104,7 +104,7 @@ class TextField(Field):
 class ModelMetaclass(type):
 
     def __new__(cls, name, bases, attrs):
-        if name == "Model":
+        if name == 'Model':
             return type.__new__(cls, name, bases, attrs)
         tableName = attrs.get('__table__', None) or name
         logging.info('found model: %s (table: %s)' % (name, tableName))
@@ -122,14 +122,14 @@ class ModelMetaclass(type):
                 else:
                     fields.append(k)
         if not primaryKey:
-            raise StandartError('Primary key not fount.')
+            raise StandardError('Primary key not found.')
         for k in mappings.keys():
             attrs.pop(k)
         escaped_fields = list(map(lambda f: '`%s`' % f, fields))
         attrs['__mappings__'] = mappings
         attrs['__table__'] = tableName
         attrs['__primary_key__'] = primaryKey
-        attrs["__fields__"] = fields
+        attrs['__fields__'] = fields
         attrs['__select__'] = 'select `%s`, %s from `%s`' % (primaryKey, ', '.join(escaped_fields), tableName)
         attrs['__insert__'] = 'insert into `%s` (%s, `%s`) values (%s)' % (tableName, ', '.join(escaped_fields), primaryKey, create_args_string(len(escaped_fields) + 1))
         attrs['__update__'] = 'update `%s` set %s where `%s`=?' % (tableName,', '.join(map(lambda f: '`%s`=?' % (mappings.get(f).name or f), fields)), primaryKey)
@@ -174,14 +174,14 @@ class Model(dict, metaclass=ModelMetaclass):
             args = []
         orderBy = kw.get('orderBy', None)
         if orderBy:
-            aql.append('order by')
+            sql.append('order by')
             sql.append(orderBy)
         limit = kw.get('limit', None)
         if limit is not None:
             sql.append('limit')
             if isinstance(limit, int):
                 sql.append('?')
-                args.append(linit)
+                args.append(limit)
             elif isinstance(limit, tuple) and len(limit) == 2:
                 sql.append('?, ?')
                 args.extend(limit)
@@ -218,7 +218,7 @@ class Model(dict, metaclass=ModelMetaclass):
             logging.warn('failed to insert record: affected rows:%s' % rows)
 
     async def update(self):
-        agrs = list(map(self.getValue, self.__fields__))
+        args = list(map(self.getValue, self.__fields__))
         args.append(self.getValue(self.__primary_key__))
         rows = await execute(self.__update__, args)
         if rows != 1:

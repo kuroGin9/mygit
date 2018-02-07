@@ -35,10 +35,9 @@
 <body>
     <nav class="uk-navbar uk-navbar-attached uk-margin-bottom">
         <div class="uk-container uk-container-center">
-            <a href="/" class="uk-navbar-brand">Awesome</a>
+            <a href="/" class="uk-navbar-brand">MyBlog</a>
             <ul class="uk-navbar-nav">
-                <li data-url="blogs"><a href="/"><i class="uk-icon-home"></i> 日志</a></li>
-                <li><a target="_blank" href="http://www.liaoxuefeng.com/wiki/0014316089557264a6b348958f449949df42a6d3a2e542c000"><i class="uk-icon-book"></i> 教程</a></li>
+                <li data-url="blogs"><a href="/"><i class="uk-icon-home"></i> 主页</a></li>
                 <li><a target="_blank" href="https://github.com/michaelliao/awesome-python3-webapp"><i class="uk-icon-code"></i> 源码</a></li>
             </ul>
             <div class="uk-navbar-flip">
@@ -48,6 +47,10 @@
                         <a href="#0"><i class="uk-icon-user"></i> {{ __user__.name }}</a>
                         <div class="uk-dropdown uk-dropdown-navbar">
                             <ul class="uk-nav uk-nav-navbar">
+                                {% if __user__.admin %}
+                                <li><a href="/manage/blogs/create">创建日志</a></li> 
+                                <li><a href="/manage/blogs">博客管理</a></li>
+                                {% endif %}
                                 <li><a href="/signout"><i class="uk-icon-sign-out"></i> 登出</a></li>
                             </ul>
                         </div>

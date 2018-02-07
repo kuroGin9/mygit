@@ -7,6 +7,8 @@ from datetime import datetime
 from aiohttp import web
 from jinja2 import Environment, FileSystemLoader
 
+from config import configs
+
 import orm
 from coroweb import add_routes, add_static
 
@@ -59,11 +61,12 @@ async def data_factory(app, handler):
         if request.method == 'POST':
             if request.content_type.startswith('application/json'):
                 request.__data__ = await request.json()
-                logging.info('request json: %s' % str(request__data__))
+                logging.info('request json: %s' % str(request.__data__))
             elif request.content_type.startswith('application/x-www-form-urlencode'):
                 request.__data__ = await request.post()
                 logging.info('request form: %s' % str(request.__data__))
-        return parse_data
+        return (await handler(request))    
+    return parse_data
 
 async def response_factory(app, handler):
     async def response(request):
@@ -74,6 +77,12 @@ async def response_factory(app, handler):
         if isinstance(r, bytes):
             resp = web.Response(body=r)
             resp.content_type = 'application/octet-stream'
+            return resp
+        if isinstance(r, str):
+            if r.startswith('redirect:'):
+                return web.HTTPFound(r[9:])
+            resp = web.Response(body=r.encode('utf-8'))
+            resp.content_type = 'text/html;charset=utf-8'
             return resp
         if isinstance(r, dict):
             template = r.get('__template__')
@@ -86,8 +95,8 @@ async def response_factory(app, handler):
                 resp = web.Response(body=app['__templating__'].get_template(template).render(**r).encode('utf-8'))
                 resp.content_type = 'text/html;charset=utf-8'
                 return resp
-        if isinstance(r, int) and r >= 100 and r < 600:
-            return web.Response(r)
+        if isinstance(r, int) and t >= 100 and t < 600:
+            return web.Response(t)
         if isinstance(r, tuple) and len(r) == 2:
             t, m = r
             if isinstance(t, int) and t >= 100 and t < 600:
@@ -104,9 +113,9 @@ def datetime_filter(t):
     if delta < 3600:
         return u'%s分钟前' % (delta // 60)
     if delta < 86400:
-        return u'%s分钟前' % (delta // 3600)
+        return u'%s小时前' % (delta // 3600)
     if delta < 604800:
-        return u'%s分钟前' % (delta // 86400)
+        return u'%s天前' % (delta // 86400)
     dt = datetime.fromtimestamp(t)
     return u'%s年%s月%s日' % (dt.year, dt.month, dt.day)
 
